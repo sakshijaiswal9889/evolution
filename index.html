@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Management System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .filters {
+            margin-bottom: 20px;
+        }
+
+        .filters label {
+            margin-right: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        button {
+            padding: 8px 16px;
+            margin: 0 5px;
+            border: none;
+            border-radius: 3px;
+            background-color: #007bff;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Employee Management System</h1>
+        <div class="filters">
+            <label for="department">Filter by Department:</label>
+            <select id="department">
+                <option value="">--Select Department--</option>
+                <option value="hr">HR</option>
+                <option value="finance">Finance</option>
+                <option value="marketing">Marketing</option>
+                <option value="engineering">Engineering</option>
+                <option value="operations">Operations</option>
+            </select>
+            <label for="gender">Filter by Gender:</label>
+            <select id="gender">
+                <option value="">--Select Gender--</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="others">Others</option>
+            </select>
+            <label for="sort">Sort by Salary:</label>
+            <select id="sort">
+                <option value="">--Select Order--</option>
+                <option value="asc">Low to High</option>
+                <option value="desc">High to Low</option>
+            </select>
+        </div>
+        <table id="employee-table">
+            <thead>
+                <tr>
+                    <th>S.no</th>
+                    <th>Name</th>
+                    <th>Gender</th>
+                    <th>Department</th>
+                    <th>Salary</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Employee data will be populated dynamically using JavaScript -->
+            </tbody>
+        </table>
+        <div class="pagination">
+            <button id="prev-btn" disabled>Previous</button>
+            <button id="next-btn">Next</button>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const data = {
+                "data": [
+                    {"id":1,"image":"https://i.imgur.com/9xEcfJj.jpg","name":"Donald Surgen","gender":"female","department":"engineering","salary":57000},
+                    {"id":2,"image":"https://i.imgur.com/9xEcfJj.jpg","name":"Brynn Wildblood","gender":"female","department":"finance","salary":27000},
+                    {"id":3,"image":"https://i.imgur.com/9xEcfJj.jpg","name":"Etta McGairl","gender":"male","department":"operations","salary":42000},
+                    {"id":4,"image":"https://i.imgur.com/9xEcfJj.jpg","name":"Alexandros Renihan","gender":"female","department":"engineering","salary":40000},
+                    {"id":5,"image":"https://i.imgur.com/9xEcfJj.jpg","name":"Geri Maudlen","gender":"others","department":"operations","salary":40000},
+                    {"id":6,"image":"https://i.imgur.com/9xEcfJj.jpg","name":"Grazia Pilkington","gender":"others","department":"operations","salary":50000},
+                    {"id":7,"image":"https://i.imgur.com/9xEcfJj.jpg","name":"Norry Bodicum","gender":"others","department":"operations","salary":30000},
+                    {"id":8,"image":"https://i.imgur.com/9xEcfJj.jpg","name":"Athena Broadey","gender":"male","department":"marketing","salary":66000},
+                    {"id":9,"image":"https://i.imgur.com/9xEcfJj.jpg","name":"Luisa Artois","gender":"male","department":"engineering","salary":45000},
+                    {"id":10,"image":"https://i.imgur.com/9xEcfJj.jpg","name":"Cookie Gimber","gender":"male","department":"finance","salary":25000}
+                ],
+                "totalPages": 10
+            };
+
+            const tableBody = document.querySelector('#employee-table tbody');
+            const departmentDropdown = document.querySelector('#department');
+            const genderDropdown = document.querySelector('#gender');
+            const sortDropdown = document.querySelector('#sort');
+            const prevBtn = document.querySelector('#prev-btn');
+            const nextBtn = document.querySelector('#next-btn');
+
+            let currentPage = 1;
+            let currentFilter = '';
+            let currentSort = '';
+            let currentOrder = '';
+
+            // Function to populate the table with employee data
+            function populateTable(data) {
+                tableBody.innerHTML = '';
+                data.forEach((employee, index) => {
+                    const row = `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${employee.name}</td>
+                            <td>${employee.gender}</td>
+                            <td>${employee.department}</td>
+                            <td>${employee.salary}</td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                });
+            }
+
+            // Function to update the table based on current filters and pagination
+            function updateTable() {
+                let filteredData = data.data;
+
+                // Apply filters
+                if (currentFilter) {
+                    filteredData = filteredData.filter(employee => employee[currentFilter] === (departmentDropdown.value || genderDropdown.value));
+                }
+
+                // Apply sorting
+                if (currentSort && currentOrder) {
+                    if (currentOrder === 'asc') {
+                        filteredData.sort((a, b) => a[currentSort] - b[currentSort]);
+                    } else if (currentOrder === 'desc') {
+                        filteredData.sort((a, b) => b[currentSort] - a[currentSort]);
+                    }
+                }
+
+                // Pagination
+                const startIndex = (currentPage - 1) * 10;
+                const endIndex = startIndex + 10;
+                const paginatedData = filteredData.slice(startIndex, endIndex);
+
+                // Populate table with paginated data
+                populateTable(paginatedData);
+
+                // Update pagination buttons
+                prevBtn.disabled = currentPage === 1;
+                nextBtn.disabled = currentPage === data.totalPages;
+            }
+
+            // Event listeners for dropdowns
+            departmentDropdown.addEventListener('change', function () {
+                currentFilter = 'department';
+                currentPage = 1;
+                updateTable();
+            });
+
+            genderDropdown.addEventListener('change', function () {
+                currentFilter = 'gender';
+                currentPage = 1;
+                updateTable();
+            });
+
+            sortDropdown.addEventListener('change', function () {
+                currentSort = 'salary';
+                currentOrder = sortDropdown.value;
+                updateTable();
+            });
+
+            // Event listeners for pagination buttons
+            prevBtn.addEventListener('click', function () {
+                if (currentPage > 1) {
+                    currentPage--;
+                    updateTable();
+                }
+            });
+
+            nextBtn.addEventListener('click', function () {
+                if (currentPage < data.totalPages) {
+                    currentPage++;
+                    updateTable();
+                }
+            });
+
+            // Initial load
+            updateTable();
+        });
+    </script>
+</body>
+</html>
